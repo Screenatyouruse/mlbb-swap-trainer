@@ -475,6 +475,48 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
     }
+
+    /* Secret Sing-Along Karaoke Overlay */
+    #karaoke-bar {
+      position: fixed;
+      top: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 110;
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 82vw;
+      padding: 5px 14px;
+      border-radius: 10px;
+      background: rgba(7, 10, 18, 0.78);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(56, 217, 249, 0.35);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    #karaoke-bar.show {
+      display: flex;
+    }
+
+    .karaoke-current {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f7ba2a;
+      text-shadow: 0 0 10px rgba(247, 186, 42, 0.45);
+      line-height: 1.25;
+    }
+
+    .karaoke-next {
+      font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      opacity: 0.72;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
   </style>
 </head>
 
@@ -506,7 +548,16 @@
     <button id="bgm-btn" class="btn" onclick="toggleMusic()">🎵 Music: ON</button>
     <button id="sound-btn" class="btn" onclick="toggleSound()">🔊 Sound: ON</button>
     <button id="hint-toggle-btn" class="btn" onclick="toggleHints()">💬 Hints: ON</button>
+    <button id="karaoke-btn" class="btn" onclick="toggleKaraoke()" title="Secret Sing-Along Mode">🎤 ???</button>
+    <button id="lrc-load-btn" class="btn" style="display:none;" onclick="document.getElementById('lrc-file-input').click()" title="Load any local .lrc file">📂 .lrc</button>
+    <input id="lrc-file-input" type="file" accept=".lrc,.txt" style="display:none;" onchange="handleLrcUpload(event)">
     <button class="btn btn-gold" onclick="resetDrill()">🔄 Restart</button>
+  </div>
+
+  <!-- Secret Sing-Along Karaoke Overlay -->
+  <div id="karaoke-bar">
+    <div id="karaoke-current" class="karaoke-current">🎤 Vibecode's Plan — 8-Bit Chip Piano</div>
+    <div id="karaoke-next" class="karaoke-next"></div>
   </div>
 
   <!-- Simulation Stage -->
@@ -709,6 +760,159 @@
       document.getElementById('bgm-btn').innerText = musicEnabled ? '🎵 Music: ON' : '🔇 Music: OFF';
       if (musicEnabled) startBgm();
       else stopBgm();
+      if (karaokeEnabled) updateKaraoke();
+    }
+
+    const DEFAULT_LRC = `[00:00.00]♪ Vibecode's Plan (8-Bit Chip Piano) ♪
+[00:04.12]Yeah they shipping and shipping and shipping and shipping
+[00:07.42]They shipping for me
+[00:09.63]Yeah
+[00:12.26]I been vibin' calm, don't write no code on my own
+[00:15.37]Selling boots mid-fight is a struggle on phone
+[00:18.43]Don't pull up at 5 AM with cache bugs on me
+[00:21.56]Hit Ctrl+Shift+R when it's glitchin' on me
+[00:24.70]I don't wanna die 'fore my Frozen goes off
+[00:27.83]Guess I see the burst that they throwin' on me
+[00:30.93]Hope my teammates live while I swap in the shop
+[00:34.00]They gon' tell the story, fast hands built different with me
+[00:37.24]Prompt's plan
+[00:39.03]Prompt's plan
+[00:41.43]I start my day in plan mode (yeah)
+[00:44.50]I write prompts, I don't write code (ayy, no)
+[00:47.62]Spent the whole class on Rose Gold (ayy, gold)
+[00:50.76]Hitbox tight, forgot to scroll (yeah, wait)
+[00:53.83]Prioritized Immo by mistake (yeah, wait)
+[00:56.97]Make another .md file
+[01:00.20]And still
+[01:03.65]Bad swap
+[01:04.85]It's a lot of bad swaps
+[01:06.28]That I'm fixing and tapping and swiping and freezing
+[01:09.48]They shipping for me
+[01:15.97]Fast hand
+[01:17.27]It's a lot of fast hands
+[01:18.78]Boots to Immo to Winter to Rose Gold Meteor
+[01:21.92]In the back of the class
+[01:24.15]Yeah, ayy, ayy
+[01:27.57]She say "Are you a SWE?" I tell her "Only partly"
+[01:30.52]I only vibecode MLBB swap drills, I'm sorry
+[01:33.85]Twenty steps, I even got the scroll in for me
+[01:36.98]8-bit chip piano when I'm drillin' in class
+[01:40.53]And you know me
+[01:42.41]Turn the Boots right into Immo, dog
+[01:45.54]Without Winter, Rose Gold, there would be no me
+[01:48.61]Imagine if I stayed in Epic II
+[01:51.81]Prompt's plan
+[01:53.70]Prompt's plan
+[01:56.05]I can't code shit on my own (ayy, no, ayy)
+[01:59.11]Watch the top pill fade real close (yep, close)
+[02:02.25]Click outside the shop to close (ayy, close, ayy)
+[02:05.35]Hosted on GitHub for free (ayy, wait)
+[02:08.48]Sound muted in lecture hall (ayy, wait)
+[02:11.58]Make sure that my thumbs stay fast
+[02:14.86]And still
+[02:18.20]Fast hand
+[02:19.42]It's a lot of fast hands
+[02:20.96]That I'm drilling and tapping and swiping and freezing
+[02:24.15]They shipping for me
+[02:26.44]Yeah, yeah
+[02:30.65]Fast hand
+[02:31.83]It's a lot of fast hands
+[02:33.37]Boots to Immo to Winter to Rose Gold Meteor
+[02:36.63]Mythic Immortal
+[02:38.88]Yeah`;
+
+    function parseLrc(text) {
+      const lines = [];
+      const tagRe = /\[(\d+):(\d+(?:\.\d+)?)\]/g;
+      text.split(/\r?\n/).forEach(raw => {
+        const times = [];
+        let m;
+        tagRe.lastIndex = 0;
+        while ((m = tagRe.exec(raw)) !== null) {
+          times.push(parseInt(m[1], 10) * 60 + parseFloat(m[2]));
+        }
+        if (times.length === 0) return;
+        const lyric = raw.replace(/\[\d+:\d+(?:\.\d+)?\]/g, '').trim();
+        times.forEach(t => lines.push({ t, text: lyric }));
+      });
+      lines.sort((a, b) => a.t - b.t);
+      return lines;
+    }
+
+    let karaokeEnabled = false;
+    let karaokeTimer = null;
+    let lyricsLines = parseLrc(DEFAULT_LRC);
+    let lastLyricIdx = -1;
+
+    function updateKaraoke() {
+      if (!karaokeEnabled) return;
+      const curEl = document.getElementById('karaoke-current');
+      const nextEl = document.getElementById('karaoke-next');
+      if (!bgmPlaying || !audioCtx || !window.BGM_DATA) {
+        curEl.innerText = '🎤 Tap anywhere to start the 8-bit beat...';
+        nextEl.innerText = '';
+        lastLyricIdx = -1;
+        return;
+      }
+      const dur = window.BGM_DATA.dur;
+      const pos = (((audioCtx.currentTime - bgmLoopStart) % dur) + dur) % dur;
+      let idx = -1;
+      for (let i = 0; i < lyricsLines.length; i++) {
+        if (lyricsLines[i].t <= pos) idx = i;
+        else break;
+      }
+      if (idx !== lastLyricIdx) {
+        lastLyricIdx = idx;
+        const curText = idx >= 0 ? (lyricsLines[idx].text || '♪ ... ♪') : '♪ ... ♪';
+        const nextText = (idx + 1 < lyricsLines.length) ? (lyricsLines[idx + 1].text || '') : '';
+        curEl.innerText = '🎤 ' + curText;
+        nextEl.innerText = nextText;
+      }
+    }
+
+    function toggleKaraoke() {
+      karaokeEnabled = !karaokeEnabled;
+      document.getElementById('karaoke-bar').classList.toggle('show', karaokeEnabled);
+      document.getElementById('karaoke-btn').innerText = karaokeEnabled ? '🎤 Sing-Along: ON' : '🎤 ???';
+      document.getElementById('lrc-load-btn').style.display = karaokeEnabled ? 'inline-flex' : 'none';
+      if (karaokeEnabled) {
+        if (!musicEnabled) {
+          musicEnabled = true;
+          const mini = document.getElementById('bgm-mini-btn');
+          mini.innerText = '🎵';
+          mini.style.opacity = '1';
+          document.getElementById('bgm-btn').innerText = '🎵 Music: ON';
+        }
+        startBgm();
+        lastLyricIdx = -1;
+        if (karaokeTimer) clearInterval(karaokeTimer);
+        karaokeTimer = setInterval(updateKaraoke, 100);
+        updateKaraoke();
+        closeMenu();
+      } else {
+        if (karaokeTimer) {
+          clearInterval(karaokeTimer);
+          karaokeTimer = null;
+        }
+        lastLyricIdx = -1;
+      }
+    }
+
+    function handleLrcUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const parsed = parseLrc(String(reader.result || ''));
+        if (parsed.length > 0) {
+          lyricsLines = parsed;
+          lastLyricIdx = -1;
+          updateKaraoke();
+          closeMenu();
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
     }
 
     function toggleSound() {
