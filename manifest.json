@@ -1,0 +1,9 @@
+{
+  "name": "MLBB Swap Trainer",
+  "short_name": "Swap Trainer",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05070a",
+  "theme_color": "#05070a"
+}
