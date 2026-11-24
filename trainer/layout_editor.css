@@ -1,0 +1,518 @@
+/* MLBB Swap Trainer — Custom UI Move & Scale Layout Editor
+ * Zero external dependencies. Works over file:// and GitHub Pages.
+ */
+
+/* Hide/dim trainer top pill while editing so top-docked toolbar never collides */
+body.le-editing #mini-hud {
+  opacity: 0.14 !important;
+  pointer-events: none !important;
+}
+
+body.le-editing #menu-drawer {
+  display: none !important;
+}
+
+/* Container state while editing */
+.le-container-editing {
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Managed items positioned via LayoutEditor */
+.le-managed {
+  will-change: transform;
+}
+
+.le-positioned {
+  position: absolute;
+}
+
+/* Temporarily reveal hidden active-scope items (e.g. Frozen skill) during edit mode */
+.le-force-visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Dedicated overlay layer synced to containerEl */
+.le-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  pointer-events: auto;
+  touch-action: none;
+  overflow: hidden;
+  /* Subtle tactical alignment grid */
+  background-color: rgba(5, 10, 20, 0.24);
+  background-image:
+    linear-gradient(to right, rgba(56, 217, 249, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 217, 249, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Subtle center crosshair guides */
+.le-overlay::before,
+.le-overlay::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: rgba(56, 217, 249, 0.14);
+}
+
+.le-overlay::before {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.le-overlay::after {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+/* Individual editable element outline handle */
+.le-handle {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed #38d9f9;
+  border-radius: 8px;
+  background: rgba(56, 217, 249, 0.09);
+  box-shadow: 0 0 10px rgba(56, 217, 249, 0.25);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.le-handle.le-immovable {
+  cursor: pointer;
+}
+
+.le-handle:hover {
+  background: rgba(56, 217, 249, 0.15);
+  box-shadow: 0 0 14px rgba(56, 217, 249, 0.4);
+}
+
+.le-handle.le-selected {
+  border: 2.5px solid #f7ba2a;
+  background: rgba(247, 186, 42, 0.14);
+  box-shadow:
+    0 0 18px rgba(247, 186, 42, 0.55),
+    inset 0 0 12px rgba(247, 186, 42, 0.18);
+}
+
+.le-handle.le-dragging {
+  cursor: grabbing;
+  background: rgba(247, 186, 42, 0.2);
+  box-shadow:
+    0 0 24px rgba(247, 186, 42, 0.75),
+    inset 0 0 16px rgba(247, 186, 42, 0.25);
+  transition: none;
+}
+
+/* Label badge pill on each handle */
+.le-badge {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(9, 15, 29, 0.92);
+  border: 1px solid rgba(56, 217, 249, 0.85);
+  color: #bae6fd;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.25px;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.le-badge.le-badge-inside {
+  top: 4px;
+}
+
+.le-badge.le-badge-bottom {
+  top: auto;
+  bottom: -22px;
+}
+
+.le-handle.le-selected .le-badge {
+  background: #f7ba2a;
+  border-color: #fde68a;
+  color: #090e1a;
+  box-shadow: 0 2px 10px rgba(247, 186, 42, 0.55);
+}
+
+.le-badge-scale {
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Corner resize knob on selected scalable handle */
+.le-resize-knob {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f7ba2a;
+  border: 2px solid #090e1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  cursor: nwse-resize;
+  touch-action: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #090e1a;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.le-handle.le-selected.le-scalable .le-resize-knob {
+  display: flex;
+}
+
+.le-resize-knob::after {
+  content: "⤡";
+}
+
+/* =====================================================================
+ * Floating / Dockable Layout Editor Toolbar
+ * ===================================================================== */
+.le-toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 260;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px 10px;
+  max-width: calc(100vw - 12px);
+  width: max-content;
+  border-radius: 12px;
+  background: rgba(10, 16, 30, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(247, 186, 42, 0.45);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.78),
+    0 0 0 1px rgba(56, 217, 249, 0.14) inset;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: top 0.18s ease, bottom 0.18s ease;
+}
+
+.le-toolbar.le-dock-top {
+  top: 8px;
+  bottom: auto;
+}
+
+.le-toolbar.le-dock-bottom {
+  top: auto;
+  bottom: 8px;
+}
+
+.le-toolbar.le-floating {
+  transform: none;
+  bottom: auto;
+  transition: none;
+}
+
+.le-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* Drag grip & dock flip */
+.le-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.le-grip:active {
+  cursor: grabbing;
+  color: #f7ba2a;
+  border-color: rgba(247, 186, 42, 0.6);
+}
+
+/* Segmented HUD / Shop preview toggle */
+.le-seg {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #334155;
+  border-radius: 7px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.le-seg-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.le-seg-btn:hover {
+  color: #f1f5f9;
+}
+
+.le-seg-btn.active {
+  background: #0284c7;
+  color: #fff;
+}
+
+/* Selected item pill */
+.le-selected-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: rgba(247, 186, 42, 0.12);
+  border: 1px solid rgba(247, 186, 42, 0.4);
+  color: #fde68a;
+  font-weight: 800;
+  font-size: 11px;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.le-selected-pill.le-none {
+  background: rgba(30, 41, 59, 0.65);
+  border-color: #334155;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.le-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f7ba2a;
+  flex-shrink: 0;
+}
+
+.le-selected-pill.le-none .le-dot {
+  background: #38d9f9;
+}
+
+/* Slider groups */
+.le-slider-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #334155;
+}
+
+.le-slider-group.le-disabled {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.le-slider-label {
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  white-space: nowrap;
+}
+
+.le-slider {
+  width: 86px;
+  height: 18px;
+  accent-color: #f7ba2a;
+  cursor: pointer;
+  margin: 0;
+}
+
+.le-slider-val {
+  min-width: 34px;
+  text-align: right;
+  font-weight: 800;
+  font-size: 11px;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Preset chips */
+.le-presets {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.le-chip {
+  appearance: none;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+}
+
+.le-chip:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.le-chip.active {
+  background: #f7ba2a;
+  border-color: #fde68a;
+  color: #090e1a;
+}
+
+/* Toolbar action buttons */
+.le-btn {
+  appearance: none;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.le-btn:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.le-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.le-btn-icon {
+  padding: 5px 7px;
+}
+
+.le-btn-danger {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+
+.le-btn-danger:hover {
+  background: rgba(185, 28, 28, 0.45);
+  border-color: #f87171;
+  color: #fff;
+}
+
+.le-btn-done {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: #34d399;
+  color: #031912;
+  font-weight: 900;
+  padding: 5px 12px;
+}
+
+.le-btn-done:hover {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #02120d;
+}
+
+/* Subtle divider */
+.le-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(148, 163, 184, 0.25);
+  flex-shrink: 0;
+}
+
+/* Compact landscape mobile tuning */
+@media (max-height: 460px), (max-width: 760px) {
+  .le-toolbar {
+    padding: 5px 7px;
+    gap: 4px;
+    border-radius: 10px;
+  }
+
+  .le-row {
+    gap: 4px;
+  }
+
+  .le-slider {
+    width: 68px;
+  }
+
+  .le-btn,
+  .le-seg-btn,
+  .le-chip {
+    padding: 4px 7px;
+    font-size: 10.5px;
+  }
+
+  .le-btn-done {
+    padding: 4px 10px;
+  }
+
+  .le-selected-pill {
+    max-width: 135px;
+    padding: 3px 7px;
+    font-size: 10.5px;
+  }
+
+  .le-sep {
+    display: none;
+  }
+}

@@ -7,8 +7,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json">
   <title>MLBB Fast-Hand Buy & Sell Trainer</title>
+  <link rel="icon" type="image/png" href="trainer_assets/items/winter_crown.png">
+  <link rel="stylesheet" href="trainer/shop_ui.css">
+  <link rel="stylesheet" href="trainer/layout_editor.css">
   <style>
     * {
       box-sizing: border-box;
@@ -36,11 +39,11 @@
       top: 6px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 120;
+      z-index: 250;
       padding: 3px 8px;
       gap: 8px;
       border-radius: 999px;
-      background: rgba(10, 14, 23, 0.72);
+      background: rgba(10, 14, 23, 0.76);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(148, 163, 184, 0.25);
       display: flex;
@@ -106,7 +109,7 @@
       top: 40px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 130;
+      z-index: 260;
       display: none;
       background: rgba(15, 23, 42, 0.96);
       border: 1px solid #334155;
@@ -116,7 +119,7 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      max-width: 92vw;
+      max-width: 94vw;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
     }
 
@@ -163,6 +166,16 @@
       background: #d97706;
     }
 
+    .btn-cyan {
+      background: #0e7490;
+      color: #f0fdfa;
+      border-color: #06b6d4;
+    }
+
+    .btn-cyan:hover {
+      background: #0891b2;
+    }
+
     .mode-toggle {
       background: #0f172a;
       border: 1px solid #334155;
@@ -179,6 +192,7 @@
       color: #64748b;
       border: none;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .mode-btn.active {
@@ -205,7 +219,7 @@
       cursor: pointer;
     }
 
-    /* Main Canvas / Simulation Stage */
+    /* Main Stage */
     main {
       width: 100vw;
       height: 100vh;
@@ -218,57 +232,7 @@
       overflow: hidden;
     }
 
-    #game-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      max-width: 100vw;
-      max-height: 100vh;
-      max-height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #screen-wrapper {
-      position: relative;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-      overflow: hidden;
-      display: inline-block;
-    }
-
-    #screen-img {
-      display: block;
-      max-width: 100vw;
-      max-height: 100vh;
-      max-height: 100dvh;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      pointer-events: none;
-    }
-
-    /* Interactive Hitbox Targets */
-    .hitbox {
-      position: absolute;
-      cursor: pointer;
-      z-index: 10;
-      touch-action: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Practice Mode Guide Ring */
-    .guide-pulse {
-      position: absolute;
-      border: 3px solid #f7ba2a;
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(247, 186, 42, 0.9), inset 0 0 10px rgba(247, 186, 42, 0.5);
-      animation: pulse-ring 1.2s infinite alternate ease-in-out;
-      pointer-events: none;
-      z-index: 12;
-    }
-
+    /* Scroll Hint Badge inside Guide Ring */
     .scroll-hint-arrow {
       display: none;
       position: absolute;
@@ -278,7 +242,7 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: rgba(10, 14, 23, 0.85);
+      background: rgba(10, 14, 23, 0.88);
       border: 2px solid #38d9f9;
       color: #38d9f9;
       padding: 8px 14px;
@@ -303,13 +267,13 @@
     }
 
     @keyframes pulse-ring {
-      0% { transform: scale(0.96); opacity: 0.7; box-shadow: 0 0 10px #f7ba2a; }
-      100% { transform: scale(1.04); opacity: 1; box-shadow: 0 0 25px #f7ba2a, inset 0 0 15px #f7ba2a; }
+      0% { transform: scale(0.97); opacity: 0.72; box-shadow: 0 0 10px #f7ba2a; }
+      100% { transform: scale(1.03); opacity: 1; box-shadow: 0 0 24px #f7ba2a, inset 0 0 12px #f7ba2a; }
     }
 
     .guide-tooltip {
       position: absolute;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       color: #f7ba2a;
       border: 1px solid #f7ba2a;
       padding: 4px 8px;
@@ -318,8 +282,8 @@
       border-radius: 4px;
       white-space: nowrap;
       pointer-events: none;
-      z-index: 15;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      z-index: 70;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.55);
     }
 
     /* Tap feedback ripples */
@@ -332,7 +296,7 @@
       transform: translate(-50%, -50%) scale(0.2);
       animation: ripple-grow 0.35s ease-out forwards;
       pointer-events: none;
-      z-index: 20;
+      z-index: 80;
     }
 
     @keyframes ripple-grow {
@@ -346,7 +310,7 @@
       background: rgba(239, 68, 68, 0.25);
       pointer-events: none;
       animation: miss-fade 0.25s ease-out forwards;
-      z-index: 30;
+      z-index: 85;
     }
 
     @keyframes miss-fade {
@@ -359,6 +323,7 @@
       display: none;
       position: fixed;
       inset: 0;
+      padding: 44px 10px 10px 10px;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(8px);
       z-index: 200;
@@ -376,33 +341,28 @@
       border-radius: 12px;
       width: 90%;
       max-width: 520px;
-      padding: 24px;
+      max-height: calc(100dvh - 54px);
+      overflow-y: auto;
+      padding: 16px 22px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(37, 99, 235, 0.3);
       text-align: center;
       animation: pop-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     @keyframes pop-in {
-      0% {
-        transform: scale(0.85);
-        opacity: 0;
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     .rank-badge {
       display: inline-block;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 1px;
-      padding: 8px 24px;
+      padding: 6px 22px;
       border-radius: 999px;
-      margin: 12px 0 6px 0;
+      margin: 10px 0 6px 0;
     }
 
     .rank-immortal {
@@ -434,17 +394,17 @@
     }
 
     .time-hero {
-      font-size: 42px;
+      font-size: 38px;
       font-weight: 900;
       font-family: "Courier New", Courier, monospace;
       color: #38d9f9;
-      margin: 8px 0;
+      margin: 6px 0;
       text-shadow: 0 0 15px rgba(56, 217, 249, 0.5);
     }
 
     .stats-table {
       width: 100%;
-      margin: 16px 0;
+      margin: 12px 0;
       border-collapse: collapse;
       font-size: 11px;
       text-align: left;
@@ -470,7 +430,7 @@
       display: flex;
       gap: 12px;
       justify-content: center;
-      margin-top: 18px;
+      margin-top: 14px;
     }
 
     /* Bottom Status Banner */
@@ -479,7 +439,7 @@
       bottom: 8px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid #334155;
       border-radius: 999px;
       padding: 5px 16px;
@@ -490,9 +450,12 @@
       align-items: center;
       gap: 8px;
       pointer-events: none;
-      z-index: 50;
+      z-index: 90;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
+      max-width: 94vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* Secret Sing-Along Karaoke Overlay */
@@ -501,7 +464,7 @@
       top: 38px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 110;
+      z-index: 240;
       pointer-events: none;
       display: none;
       flex-direction: column;
@@ -556,6 +519,7 @@
     <div class="mode-toggle">
       <button id="btn-drill-triple" class="mode-btn active" onclick="setDrill('triple')">❄ Triple (20)</button>
       <button id="btn-drill-double" class="mode-btn" onclick="setDrill('double')">⚡ Immo→Winter (12)</button>
+      <button id="btn-drill-sandbox" class="mode-btn" onclick="setDrill('sandbox')">🆓 Free Sandbox</button>
     </div>
     <div class="mode-toggle">
       <button id="btn-mode-practice" class="mode-btn active" onclick="setMode('practice')">🎓 Training</button>
@@ -563,6 +527,7 @@
     </div>
     <span class="drawer-step-label" id="step-desc-text">Click Buy Shop</span>
     <button id="hitbox-mode-btn" class="btn" onclick="toggleHitboxMode()">👍 Hitbox: Realistic</button>
+    <button id="edit-layout-btn" class="btn btn-cyan" onclick="openLayoutEditor()">📐 Edit Layout</button>
     <button id="fs-drawer-btn" class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
     <button id="bgm-btn" class="btn" onclick="toggleMusic()">🎵 Music: ON</button>
     <label class="vol-control" title="Music Volume">
@@ -580,22 +545,146 @@
 
   <!-- Secret Sing-Along Karaoke Overlay -->
   <div id="karaoke-bar">
-    <div id="karaoke-current" class="karaoke-current">🎤 Vibecode's Plan — 8-Bit Chip Piano</div>
+    <div id="karaoke-current" class="karaoke-current">🎤 Prompt's Plan — 8-Bit Chip Piano</div>
     <div id="karaoke-next" class="karaoke-next"></div>
   </div>
 
-  <!-- Simulation Stage -->
+  <!-- Interactive MLBB Battlefield & Simple Mode Shop Stage -->
   <main id="main-stage">
-    <div id="game-container">
-      <div id="screen-wrapper">
-        <img id="screen-img" src="trainer_assets/00_hud_start.jpg" alt="MLBB Game Screen">
-        <!-- Interactive Target Hitbox -->
-        <div id="active-hitbox" class="hitbox"></div>
-        <!-- Practice Guide Ring -->
-        <div id="guide-indicator" class="guide-pulse">
-          <div id="guide-tip" class="guide-tooltip">1. BUY SHOP</div>
-          <div class="scroll-hint-arrow">⬆ SWIPE UP</div>
+    <div id="game-stage">
+      <!-- Frozen Active Skill Visual FX -->
+      <div id="frozen-vignette"></div>
+      <div id="frozen-hero-fx">
+        <span class="frozen-untargetable-tag">❄️ Untargetable</span>
+        <div class="frozen-crystal-ring"></div>
+      </div>
+
+      <!-- Outside-Shop HUD Layer -->
+      <div id="hud-layer">
+        <!-- Shop / Gold Button -->
+        <button id="hud-shop" type="button" aria-label="Open Shop">
+          <span class="hud-shop-inner">
+            <span class="hud-gold-sign">$</span>
+            <span id="hud-gold-text">29,764</span>
+          </span>
+        </button>
+
+        <!-- Quick-Buy Card -->
+        <button id="hud-quickbuy" type="button" aria-label="Quick Buy Item">
+          <span class="hud-qb-inner">
+            <span class="hud-qb-text">
+              <span id="hud-qb-name" class="hud-qb-name">Immortality</span>
+              <span id="hud-qb-stats" class="hud-qb-stats">+850 HP  +15 Physical Defense</span>
+              <span id="hud-qb-desc" class="hud-qb-desc">Resurrection</span>
+            </span>
+            <span class="hud-qb-icon-wrap">
+              <img id="hud-qb-img" src="trainer_assets/items/immortality.png" alt="Immortality" draggable="false">
+              <span id="hud-qb-price" class="hud-qb-price">2014</span>
+            </span>
+          </span>
+        </button>
+
+        <!-- Active Skill (Frozen) Button -->
+        <button id="hud-frozen" type="button" class="hud-hidden" aria-label="Activate Frozen">
+          <span class="hud-frozen-inner">
+            <span class="hud-frozen-circle">
+              <img id="hud-frozen-img" src="trainer_assets/items/skill_frozen.png" alt="Frozen" draggable="false">
+              <span id="hud-frozen-cd" class="hud-frozen-cd">100</span>
+            </span>
+            <span id="hud-frozen-label" class="hud-frozen-label">Frozen</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Inside-Shop Simple Mode Modal (1:1 Native MLBB Two-Half Layout) -->
+      <div id="shop-backdrop">
+        <div id="shop-panel" role="dialog" aria-label="MLBB Equipment Shop">
+          <!-- LEFT HALF: Gold + Mode Tabs | Sidebar + 2-Col Grid | Builds/Reorder + 6-Slot Bar -->
+          <div class="shop-left-half">
+            <div class="shop-left-header">
+              <div id="shop-gold-text" class="shop-gold-display">$ 29764</div>
+              <div class="shop-mode-bar">
+                <div class="shop-mode-tabs">
+                  <span class="shop-mode-tab">All Equipment</span>
+                  <span class="shop-mode-tab active">Simple Mode</span>
+                </div>
+                <div class="shop-filter-icons" aria-hidden="true">
+                  <span class="shop-filter-ico" title="Attribute"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/><path d="M10 6v8M6 10h8"/></svg></span>
+                  <span class="shop-filter-ico" title="Penetration"><svg viewBox="0 0 20 20"><path d="M4 16L15 5M11 5h4v4"/></svg></span>
+                  <span class="shop-filter-ico" title="Defense"><svg viewBox="0 0 20 20"><path d="M10 3l6 2.5v4.5c0 3.8-2.6 6.2-6 7.5-3.4-1.3-6-3.7-6-7.5V5.5L10 3z"/></svg></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="shop-left-body">
+              <!-- Left Category Sidebar -->
+              <nav id="shop-tabs" aria-label="Equipment Categories"></nav>
+              <!-- Center Native Smooth-Scrolling 2-Column Item Grid -->
+              <div id="shop-grid" aria-label="Equipment List"></div>
+            </div>
+
+            <!-- Bottom 6-Slot Inventory Strip (aligned under Left Half, 1:1 MLBB) -->
+            <div id="shop-inventory-bar">
+              <div class="inv-left-badges">
+                <span class="inv-deco-pill">Builds</span>
+                <span class="inv-deco-pill">Reorder</span>
+              </div>
+              <div id="shop-slots" aria-label="Equipped Items"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT HALF: Builds Header + X | Build Path Tree | Item Stats & Passive | Sell All + Sell/Purchase -->
+          <div class="shop-right-half">
+            <div class="shop-right-header">
+              <span class="shop-builds-label">Builds</span>
+              <div class="shop-close-cell">
+                <button id="shop-close-btn" type="button" aria-label="Close Shop">✕</button>
+              </div>
+            </div>
+
+            <section id="shop-detail" aria-label="Item Details">
+              <div class="detail-path-section">
+                <div class="detail-path-top">
+                  <span class="detail-section-label">Build Path</span>
+                  <div class="detail-prio-group">
+                    <span class="detail-share-btn" aria-hidden="true">➤</span>
+                    <button id="shop-prioritize-btn" type="button">🛒 Prioritize</button>
+                  </div>
+                </div>
+                <div id="shop-build-tree" class="detail-tree"></div>
+              </div>
+
+              <div class="detail-info">
+                <div>
+                  <div id="detail-name" class="detail-name"></div>
+                  <ul id="detail-stats" class="detail-stats"></ul>
+                </div>
+                <div id="detail-passive" class="detail-passive"></div>
+              </div>
+
+              <div class="detail-actions">
+                <button id="shop-sell-all-btn" type="button">Sell All</button>
+                <div id="shop-action-wrap">
+                  <div class="shop-action-top-row">
+                    <div class="shop-action-price-slot">
+                      <span id="shop-action-price"></span>
+                    </div>
+                  </div>
+                  <div class="shop-action-btn-row">
+                    <span id="shop-action-note"></span>
+                    <button id="shop-action-btn" type="button" class="mode-sell">Sell</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
+      </div>
+
+      <!-- Dynamic Practice Guide Ring (auto-follows live DOM rects & custom layouts) -->
+      <div id="guide-indicator" class="guide-pulse">
+        <div id="guide-tip" class="guide-tooltip">1. BUY SHOP</div>
+        <div class="scroll-hint-arrow">⬆ SWIPE UP</div>
       </div>
     </div>
 
@@ -637,6 +726,8 @@
   </div>
 
   <script src="trainer_assets/bgm.js"></script>
+  <script src="trainer/items_data.js"></script>
+  <script src="trainer/layout_editor.js"></script>
   <script>
     /* ============================================================
      * Audio Synthesis (Web Audio API - Zero External Files)
@@ -1086,272 +1177,10 @@
     }
 
     /* ============================================================
-     * Step Definitions (19-Step Triple Swap from 1000040726.mp4)
+     * Menu, Fullscreen & Global Shortcuts
      * ============================================================ */
-    const BOX_SHOP  = { l: 0.893, t: 0.006, w: 0.067, h: 0.080 };
-    const PAD_SHOP  = { l: 0.885, t: 0.000, w: 0.115, h: 0.092 };
-    const BOX_SELL  = { l: 0.766, t: 0.862, w: 0.121, h: 0.066 };
-    const PAD_SELL  = { l: 0.755, t: 0.842, w: 0.140, h: 0.100 };
-    const BOX_BUY   = { l: 0.762, t: 0.858, w: 0.124, h: 0.070 };
-    const PAD_BUY   = { l: 0.755, t: 0.842, w: 0.140, h: 0.100 };
-    const BOX_X     = { l: 0.846, t: 0.072, w: 0.046, h: 0.068 };
-    const PAD_X     = { l: 0.830, t: 0.055, w: 0.075, h: 0.100 };
-    const BOX_SLOT1 = { l: 0.217, t: 0.838, w: 0.047, h: 0.100 };
-    const PAD_SLOT1 = { l: 0.212, t: 0.820, w: 0.055, h: 0.135 };
-    const SHOP_MODAL = { l: 0.097, t: 0.052, r: 0.903, b: 0.950 };
-
-    const ALL_STEPS = [
-      {
-        step: 1,
-        title: "Click Buy Shop",
-        hint: "Tap the Shop / Gold button top right ($29,764) to open the shop!",
-        img: "trainer_assets/00_hud_start.jpg",
-        sound: "click",
-        box: BOX_SHOP,
-        padBox: PAD_SHOP,
-        tooltip: "1. BUY SHOP"
-      },
-      {
-        step: 2,
-        title: "Sell Boots",
-        hint: "Arcane Boots is selected. Tap the pink 'Sell' button ($216) bottom right!",
-        img: "trainer_assets/01_shop_boots_sel.jpg",
-        sound: "coin",
-        box: BOX_SELL,
-        padBox: PAD_SELL,
-        tooltip: "2. SELL BOOTS"
-      },
-      {
-        step: 3,
-        exitShop: true,
-        title: "Exit Shop (X)",
-        hint: "Boots sold! Tap the white 'X' button or anywhere outside the shop.",
-        img: "trainer_assets/02_shop_boots_sold.jpg",
-        sound: "click",
-        box: BOX_X,
-        padBox: PAD_X,
-        tooltip: "3. EXIT (X)"
-      },
-      {
-        step: 4,
-        title: "Buy Immortality",
-        hint: "Tap the Quick-Buy Immortality icon ($2014) top right on the HUD!",
-        img: "trainer_assets/03_hud_immo_quickbuy.jpg",
-        sound: "coin",
-        box: { l: 0.853, t: 0.100, w: 0.050, h: 0.112 },
-        padBox: { l: 0.750, t: 0.090, w: 0.160, h: 0.135 },
-        tooltip: "4. BUY IMMO"
-      },
-      {
-        step: 5,
-        title: "Click Buy Shop Again",
-        hint: "Immortality is equipped! Tap the Shop / Gold button top right again.",
-        img: "trainer_assets/04_hud_after_immo.jpg",
-        sound: "click",
-        box: BOX_SHOP,
-        padBox: PAD_SHOP,
-        tooltip: "5. OPEN SHOP"
-      },
-      {
-        step: 6,
-        title: "Select Immortality (Slot 1)",
-        hint: "Tap Immortality in inventory Slot 1 (bottom left) to select it!",
-        img: "trainer_assets/05_shop_reopen_slot1.jpg",
-        sound: "click",
-        box: BOX_SLOT1,
-        padBox: PAD_SLOT1,
-        tooltip: "6. TAP IMMO"
-      },
-      {
-        step: 7,
-        title: "Sell Immortality",
-        hint: "Immortality is selected. Tap the pink 'Sell' button ($1272) bottom right!",
-        img: "trainer_assets/06_shop_immo_sel.jpg",
-        sound: "coin",
-        box: BOX_SELL,
-        padBox: PAD_SELL,
-        tooltip: "7. SELL IMMO"
-      },
-      {
-        step: 8,
-        title: "Go to Magic Tab",
-        hint: "Tap the 'Magic' category tab on the left navigation column!",
-        img: "trainer_assets/07_shop_immo_sold.jpg",
-        sound: "click",
-        box: { l: 0.100, t: 0.335, w: 0.100, h: 0.075 },
-        padBox: { l: 0.085, t: 0.325, w: 0.120, h: 0.095 },
-        tooltip: "8. MAGIC TAB"
-      },
-      {
-        step: 9,
-        title: "Click Winter Crown",
-        hint: "Tap Winter Crown ($1814) in the Magic grid!",
-        img: "trainer_assets/08_shop_magic_tab.jpg",
-        sound: "click",
-        box: { l: 0.358, t: 0.495, w: 0.134, h: 0.127 },
-        padBox: { l: 0.348, t: 0.485, w: 0.150, h: 0.145 },
-        tooltip: "9. WINTER CROWN"
-      },
-      {
-        step: 10,
-        title: "Buy Winter Crown",
-        hint: "Tap the gold 'Purchase' button ($1814) at the bottom right!",
-        img: "trainer_assets/09_shop_winter_sel.jpg",
-        sound: "coin",
-        box: BOX_BUY,
-        padBox: PAD_BUY,
-        tooltip: "10. BUY WINTER"
-      },
-      {
-        step: 11,
-        exitShop: true,
-        title: "Exit Shop (X)",
-        hint: "Winter Crown bought! Tap the white 'X' button or anywhere outside the shop.",
-        img: "trainer_assets/10_shop_winter_bought.jpg",
-        sound: "click",
-        box: BOX_X,
-        padBox: PAD_X,
-        tooltip: "11. EXIT (X)"
-      },
-      {
-        step: 12,
-        title: "Activate Frozen",
-        hint: "Activate Winter Crown! Tap the blue 'Frozen' skill button on the HUD!",
-        img: "trainer_assets/11_hud_frozen_ready.jpg",
-        sound: "freeze",
-        box: { l: 0.811, t: 0.332, w: 0.045, h: 0.105 },
-        padBox: { l: 0.798, t: 0.315, w: 0.072, h: 0.140 },
-        tooltip: "12. FROZEN!"
-      },
-      {
-        step: 13,
-        title: "Open Shop (While Frozen)",
-        hint: "Quickly tap the Shop button top right while Frozen is active!",
-        img: "trainer_assets/12_hud_frozen_active.jpg",
-        sound: "click",
-        box: BOX_SHOP,
-        padBox: PAD_SHOP,
-        tooltip: "13. OPEN SHOP"
-      },
-      {
-        step: 14,
-        title: "Select Winter Crown (Slot 1)",
-        hint: "Tap Winter Crown in inventory Slot 1 (bottom left) to select it!",
-        img: "trainer_assets/13_shop_frozen_reopen.jpg",
-        sound: "click",
-        box: BOX_SLOT1,
-        padBox: PAD_SLOT1,
-        tooltip: "14. TAP WINTER"
-      },
-      {
-        step: 15,
-        title: "Sell Winter Crown",
-        hint: "Tap the pink 'Sell' button ($1146) bottom right to sell Winter Crown!",
-        img: "trainer_assets/14_shop_winter_sell.jpg",
-        sound: "coin",
-        box: BOX_SELL,
-        padBox: PAD_SELL,
-        tooltip: "15. SELL WINTER"
-      },
-      {
-        step: 16,
-        title: "Go to Attack Tab",
-        hint: "Tap the 'Attack' category tab on the left navigation column!",
-        img: "trainer_assets/15_shop_winter_sold.jpg",
-        sound: "click",
-        box: { l: 0.100, t: 0.235, w: 0.100, h: 0.068 },
-        padBox: { l: 0.085, t: 0.225, w: 0.120, h: 0.088 },
-        tooltip: "16. ATTACK TAB"
-      },
-      {
-        step: 17,
-        type: "scroll",
-        title: "Scroll to Rose Gold",
-        hint: "Swipe UP on the Attack item list (or scroll mouse wheel down) to reveal Rose Gold Meteor!",
-        img: "trainer_assets/16a_shop_attack_top.jpg",
-        scrollFrames: [
-          "trainer_assets/16b_shop_attack_mid1.jpg",
-          "trainer_assets/16c_shop_attack_mid2.jpg"
-        ],
-        sound: "scroll",
-        box: { l: 0.205, t: 0.140, w: 0.295, h: 0.660 },
-        padBox: { l: 0.190, t: 0.110, w: 0.325, h: 0.710 },
-        tooltip: "17. SWIPE UP"
-      },
-      {
-        step: 18,
-        title: "Click Rose Gold Meteor",
-        hint: "Tap Rose Gold Meteor ($1928) in the Attack grid!",
-        img: "trainer_assets/16_shop_attack_rosegold.jpg",
-        sound: "click",
-        box: { l: 0.210, t: 0.405, w: 0.135, h: 0.140 },
-        padBox: { l: 0.200, t: 0.395, w: 0.155, h: 0.160 },
-        tooltip: "18. ROSE GOLD"
-      },
-      {
-        step: 19,
-        title: "Buy Rose Gold Meteor",
-        hint: "Tap the gold 'Purchase' button ($1928) at the bottom right!",
-        img: "trainer_assets/17_shop_rosegold_sel.jpg",
-        sound: "coin",
-        box: BOX_BUY,
-        padBox: PAD_BUY,
-        tooltip: "19. BUY ROSE GOLD"
-      },
-      {
-        step: 20,
-        exitShop: true,
-        title: "Exit Shop (X)",
-        hint: "Rose Gold Meteor equipped! Tap the white 'X' button or anywhere outside the shop to finish!",
-        img: "trainer_assets/18_shop_rosegold_bought.jpg",
-        sound: "click",
-        box: BOX_X,
-        padBox: PAD_X,
-        tooltip: "20. EXIT (X)"
-      }
-    ];
-    const FINAL_IMG_TRIPLE = "trainer_assets/19_hud_rosegold_done.jpg";
-    const FINAL_IMG_DOUBLE = "trainer_assets/12_hud_frozen_active.jpg";
-    const PRELOADED = [];
-
-    /* ============================================================
-     * State & Logic
-     * ============================================================ */
-    let currentStepIdx = 0;
-    let drill = 'triple'; // 'triple' (20) or 'double' (12)
-    let mode = 'practice'; // 'practice' or 'ranked'
-    let hitboxMode = 'realistic'; // 'realistic' or 'strict'
-    let isRunning = false;
-    let startTime = 0;
-    let stepStartTime = 0;
-    let lastTapTime = 0;
-    let scrollDrag = null;
-    let wheelAccum = 0;
-    let splits = [];
-    let timerInterval = null;
-    let misclicks = 0;
-    let hintsVisible = true;
-
-    function getActiveSteps() {
-      return drill === 'double' ? ALL_STEPS.slice(0, 12) : ALL_STEPS;
-    }
-
-    function getFinalImg() {
-      return drill === 'double' ? FINAL_IMG_DOUBLE : FINAL_IMG_TRIPLE;
-    }
-
-    const screenImg = document.getElementById('screen-img');
-    const screenWrapper = document.getElementById('screen-wrapper');
-    const activeHitbox = document.getElementById('active-hitbox');
-    const guideIndicator = document.getElementById('guide-indicator');
-    const guideTip = document.getElementById('guide-tip');
-    const hudTimer = document.getElementById('hud-timer');
-    const stepNumberPill = document.getElementById('step-number-pill');
-    const stepDescText = document.getElementById('step-desc-text');
-    const statusHint = document.getElementById('status-hint');
     const miniHud = document.getElementById('mini-hud');
     const menuDrawer = document.getElementById('menu-drawer');
-    const mainStage = document.getElementById('main-stage');
 
     function toggleMenu() {
       menuDrawer.classList.toggle('open');
@@ -1359,12 +1188,6 @@
 
     function closeMenu() {
       menuDrawer.classList.remove('open');
-    }
-
-    function toggleHints() {
-      hintsVisible = !hintsVisible;
-      document.getElementById('hint-toggle-btn').innerText = hintsVisible ? '💬 Hints: ON' : '💬 Hints: OFF';
-      statusHint.style.display = (mode === 'practice' && hintsVisible && !isRunning) ? 'flex' : 'none';
     }
 
     function updateFullscreenUI() {
@@ -1393,406 +1216,8 @@
       }
     }
 
-    function setDrill(newDrill) {
-      drill = newDrill;
-      document.getElementById('btn-drill-triple').className = 'mode-btn' + (drill === 'triple' ? ' active' : '');
-      document.getElementById('btn-drill-double').className = 'mode-btn' + (drill === 'double' ? ' active' : '');
-      resetDrill();
-    }
-
-    function toggleHitboxMode() {
-      hitboxMode = (hitboxMode === 'realistic') ? 'strict' : 'realistic';
-      document.getElementById('hitbox-mode-btn').innerText = hitboxMode === 'realistic' ? '👍 Hitbox: Realistic' : '🎯 Hitbox: Strict';
-      applyHitboxPosition();
-    }
-
-    function setMode(newMode) {
-      mode = newMode;
-      document.getElementById('btn-mode-practice').className = 'mode-btn' + (mode === 'practice' ? ' active' : '');
-      document.getElementById('btn-mode-ranked').className = 'mode-btn' + (mode === 'ranked' ? ' active' : '');
-      closeMenu();
-      applyHitboxPosition();
-      resetDrill();
-    }
-
-    function applyHitboxPosition() {
-      const steps = getActiveSteps();
-      const step = steps[currentStepIdx];
-      if (!step) return;
-
-      scrollDrag = null;
-      wheelAccum = 0;
-      screenImg.src = step.img;
-      stepNumberPill.innerText = `${step.step}/${steps.length}`;
-      stepDescText.innerText = step.title;
-      statusHint.innerText = `👉 Step ${step.step}: ${step.hint}`;
-      statusHint.style.display = (mode === 'practice' && hintsVisible && !isRunning) ? 'flex' : 'none';
-
-      const b = step.box;
-      const hb = (hitboxMode === 'realistic' && step.padBox) ? step.padBox : step.box;
-      activeHitbox.style.left = (hb.l * 100) + '%';
-      activeHitbox.style.top = (hb.t * 100) + '%';
-      activeHitbox.style.width = (hb.w * 100) + '%';
-      activeHitbox.style.height = (hb.h * 100) + '%';
-      activeHitbox.style.cursor = step.type === 'scroll' ? 'ns-resize' : 'pointer';
-
-      guideIndicator.classList.toggle('is-scroll', step.type === 'scroll');
-      if (mode === 'practice') {
-        guideIndicator.style.display = 'block';
-        guideIndicator.style.left = (b.l * 100) + '%';
-        guideIndicator.style.top = (b.t * 100) + '%';
-        guideIndicator.style.width = (b.w * 100) + '%';
-        guideIndicator.style.height = (b.h * 100) + '%';
-        guideTip.innerText = step.tooltip;
-
-        if (b.t < 0.16) {
-          guideTip.style.top = 'calc(100% + 6px)';
-          guideTip.style.bottom = 'auto';
-        } else {
-          guideTip.style.bottom = 'calc(100% + 6px)';
-          guideTip.style.top = 'auto';
-        }
-
-        const cx = b.l + b.w / 2;
-        if (cx > 0.85) {
-          guideTip.style.right = '0';
-          guideTip.style.left = 'auto';
-          guideTip.style.transform = 'none';
-        } else if (cx < 0.15) {
-          guideTip.style.left = '0';
-          guideTip.style.right = 'auto';
-          guideTip.style.transform = 'none';
-        } else {
-          guideTip.style.left = '50%';
-          guideTip.style.right = 'auto';
-          guideTip.style.transform = 'translateX(-50%)';
-        }
-      } else {
-        guideIndicator.style.display = 'none';
-      }
-    }
-
-    function startTimer() {
-      if (isRunning) return;
-      isRunning = true;
-      startTime = performance.now();
-      stepStartTime = startTime;
-      hudTimer.classList.add('running');
-      miniHud.classList.add('dimmed');
-      closeMenu();
-      statusHint.style.display = 'none';
-      timerInterval = setInterval(() => {
-        const elapsed = (performance.now() - startTime) / 1000;
-        hudTimer.innerText = elapsed.toFixed(3) + 's';
-      }, 25);
-    }
-
-    function stopTimer() {
-      isRunning = false;
-      clearInterval(timerInterval);
-      hudTimer.classList.remove('running');
-      miniHud.classList.remove('dimmed');
-      const totalElapsed = (performance.now() - startTime) / 1000;
-      hudTimer.innerText = totalElapsed.toFixed(3) + 's';
-      return totalElapsed;
-    }
-
-    function completeCurrentStep(e) {
-      const now = performance.now();
-      const steps = getActiveSteps();
-      const curStep = steps[currentStepIdx];
-
-      // Record split
-      const splitTime = (now - stepStartTime) / 1000;
-      splits.push({
-        step: curStep.step,
-        title: curStep.title,
-        duration: splitTime
-      });
-      stepStartTime = now;
-
-      // Sound effect
-      const snd = curStep.sound;
-      if (snd === 'coin') playCoinSound();
-      else if (snd === 'freeze') playFreezeSound();
-      else if (snd === 'scroll') playScrollSound();
-      else playClickSound();
-
-      // Spawn visual tap ripple
-      createRipple(e);
-
-      // Advance step
-      currentStepIdx++;
-      if (currentStepIdx < steps.length) {
-        applyHitboxPosition();
-      } else {
-        // Complete!
-        screenImg.src = getFinalImg();
-        activeHitbox.style.display = 'none';
-        guideIndicator.style.display = 'none';
-        const total = stopTimer();
-        setTimeout(() => showVictory(total), 350);
-      }
-    }
-
-    function handleValidTap(e) {
-      e.stopPropagation();
-      closeMenu();
-      initAudio();
-
-      const steps = getActiveSteps();
-      const curStep = steps[currentStepIdx];
-      if (!curStep) return;
-
-      if (curStep.type === 'scroll') {
-        if (!isRunning) {
-          startTimer();
-        }
-        scrollDrag = { pointerId: e.pointerId, startY: e.clientY, lastY: e.clientY };
-        try { activeHitbox.setPointerCapture(e.pointerId); } catch (_) { }
-        return;
-      }
-
-      const now = performance.now();
-      if (now - lastTapTime < 60) return;
-      lastTapTime = now;
-
-      if (!isRunning) {
-        startTimer();
-      }
-      completeCurrentStep(e);
-    }
-
-    function releaseScrollCapture(pointerId) {
-      try {
-        if (activeHitbox.hasPointerCapture(pointerId)) {
-          activeHitbox.releasePointerCapture(pointerId);
-        }
-      } catch (_) { }
-    }
-
-    function handleScrollMove(e) {
-      if (!scrollDrag || e.pointerId !== scrollDrag.pointerId) return;
-      e.preventDefault();
-      const steps = getActiveSteps();
-      const curStep = steps[currentStepIdx];
-      if (!curStep || curStep.type !== 'scroll') return;
-
-      const dy = scrollDrag.startY - e.clientY;
-      const threshold = Math.max(45, screenWrapper.clientHeight * 0.14);
-      const progress = dy / threshold;
-
-      if (progress >= 1.0) {
-        const pid = scrollDrag.pointerId;
-        scrollDrag = null;
-        releaseScrollCapture(pid);
-        completeCurrentStep(e);
-      } else if (progress >= 0.65) {
-        screenImg.src = curStep.scrollFrames[1];
-      } else if (progress >= 0.30) {
-        screenImg.src = curStep.scrollFrames[0];
-      } else {
-        screenImg.src = curStep.img;
-      }
-    }
-
-    function handleScrollEnd(e) {
-      if (!scrollDrag || e.pointerId !== scrollDrag.pointerId) return;
-      const steps = getActiveSteps();
-      const curStep = steps[currentStepIdx];
-      const dy = scrollDrag.startY - e.clientY;
-      const threshold = Math.max(45, screenWrapper.clientHeight * 0.14);
-      const pid = scrollDrag.pointerId;
-      scrollDrag = null;
-      releaseScrollCapture(pid);
-
-      if (!curStep || curStep.type !== 'scroll') return;
-      if (dy >= threshold * 0.55) {
-        completeCurrentStep(e);
-      } else {
-        screenImg.src = curStep.img;
-      }
-    }
-
-    function handleScrollWheel(e) {
-      const steps = getActiveSteps();
-      const curStep = steps[currentStepIdx];
-      if (!curStep || curStep.type !== 'scroll') return;
-
-      e.preventDefault();
-      e.stopPropagation();
-      closeMenu();
-      initAudio();
-      if (!isRunning) {
-        startTimer();
-      }
-      if (e.deltaY > 0) {
-        wheelAccum += e.deltaY;
-        if (wheelAccum >= 120) {
-          wheelAccum = 0;
-          completeCurrentStep(e);
-        } else if (wheelAccum >= 75) {
-          screenImg.src = curStep.scrollFrames[1];
-        } else if (wheelAccum >= 35) {
-          screenImg.src = curStep.scrollFrames[0];
-        }
-      }
-    }
-
-    function triggerExitStep(e) {
-      e.stopPropagation();
-      closeMenu();
-      initAudio();
-      const now = performance.now();
-      if (now - lastTapTime < 60) return;
-      lastTapTime = now;
-      if (!isRunning) startTimer();
-      completeCurrentStep(e);
-    }
-
-    function handleMissTap(e) {
-      if (e.target === activeHitbox) return;
-      const curStep = getActiveSteps()[currentStepIdx];
-      if (curStep && curStep.exitShop) {
-        const rect = screenWrapper.getBoundingClientRect();
-        const nx = (e.clientX - rect.left) / rect.width;
-        const ny = (e.clientY - rect.top) / rect.height;
-        if (nx < SHOP_MODAL.l || nx > SHOP_MODAL.r || ny < SHOP_MODAL.t || ny > SHOP_MODAL.b) {
-          triggerExitStep(e);
-          return;
-        }
-      }
-      initAudio();
-      misclicks++;
-      playErrorBuzz();
-
-      // Show red miss flash
-      const flash = document.createElement('div');
-      flash.className = 'miss-flash';
-      screenWrapper.appendChild(flash);
-      setTimeout(() => flash.remove(), 250);
-    }
-
-    function createRipple(e) {
-      const rect = screenWrapper.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-
-      const rip = document.createElement('div');
-      rip.className = 'tap-ripple';
-      rip.style.left = x + 'px';
-      rip.style.top = y + 'px';
-      screenWrapper.appendChild(rip);
-      setTimeout(() => rip.remove(), 400);
-    }
-
-    function resetDrill() {
-      clearInterval(timerInterval);
-      isRunning = false;
-      currentStepIdx = 0;
-      lastTapTime = 0;
-      scrollDrag = null;
-      wheelAccum = 0;
-      splits = [];
-      misclicks = 0;
-      hudTimer.innerText = '0.000s';
-      hudTimer.classList.remove('running');
-      miniHud.classList.remove('dimmed');
-      activeHitbox.style.display = 'block';
-      closeMenu();
-      closeModal();
-      applyHitboxPosition();
-    }
-
-    function showVictory(total) {
-      playVictoryChime();
-
-      let rankClass = 'rank-epic';
-      let rankName = 'Epic / Grandmaster';
-      let comment = 'Immortality will expire before you freeze! Keep practicing finger speed.';
-
-      const thresholds = (drill === 'triple')
-        ? [4.10, 5.40, 7.00, 9.00]
-        : [2.20, 3.00, 4.00, 5.50];
-
-      if (total < thresholds[0]) {
-        rankClass = 'rank-immortal';
-        rankName = 'Mythical Immortal';
-        comment = '🔥 INHUMAN REACTION! Pro MPL player tier fast swap!';
-      } else if (total < thresholds[1]) {
-        rankClass = 'rank-glory';
-        rankName = 'Mythical Glory';
-        comment = '⚡ Flawless swap! You can pull this off in high rank teamfights.';
-      } else if (total < thresholds[2]) {
-        rankClass = 'rank-mythic';
-        rankName = 'Mythic';
-        comment = '👍 Good speed! With a bit more muscle memory, you will be unstoppable.';
-      } else if (total < thresholds[3]) {
-        rankClass = 'rank-legend';
-        rankName = 'Legend';
-        comment = 'Decent, but you might get bursted down before your swap completes.';
-      }
-
-      const resRank = document.getElementById('res-rank');
-      resRank.className = `rank-badge ${rankClass}`;
-      resRank.innerText = rankName;
-
-      document.getElementById('res-time').innerText = total.toFixed(3) + 's';
-      document.getElementById('res-comment').innerText = comment;
-
-      // Populate splits table
-      const tbody = document.getElementById('split-table-body');
-      tbody.innerHTML = '';
-
-      let maxDuration = -1;
-      let slowestIdx = -1;
-      splits.forEach((s, idx) => {
-        if (s.duration > maxDuration) {
-          maxDuration = s.duration;
-          slowestIdx = idx;
-        }
-      });
-
-      splits.forEach((s, idx) => {
-        const tr = document.createElement('tr');
-        if (idx === slowestIdx) tr.className = 'slowest';
-        tr.innerHTML = `
-          <td>${s.step}</td>
-          <td>${s.title} ${idx === slowestIdx ? '<span style="font-size: 10px; color:#f87171;">(Slowest)</span>' : ''}</td>
-          <td style="text-align: right; font-family: monospace;">${s.duration.toFixed(3)}s</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('victory-modal').classList.add('show');
-    }
-
-    function closeModal() {
-      document.getElementById('victory-modal').classList.remove('show');
-    }
-
-    /* Event Listeners */
-    activeHitbox.addEventListener('pointerdown', handleValidTap);
-    activeHitbox.addEventListener('pointermove', handleScrollMove);
-    activeHitbox.addEventListener('pointerup', handleScrollEnd);
-    activeHitbox.addEventListener('pointercancel', handleScrollEnd);
-    activeHitbox.addEventListener('wheel', handleScrollWheel, { passive: false });
-    screenWrapper.addEventListener('pointerdown', handleMissTap);
     miniHud.addEventListener('pointerdown', (e) => e.stopPropagation());
     menuDrawer.addEventListener('pointerdown', (e) => e.stopPropagation());
-    mainStage.addEventListener('pointerdown', (e) => {
-      if (!menuDrawer.contains(e.target) && !miniHud.contains(e.target)) {
-        closeMenu();
-        if (!screenWrapper.contains(e.target)) {
-          const curStep = getActiveSteps()[currentStepIdx];
-          if (curStep && curStep.exitShop) {
-            triggerExitStep(e);
-          }
-        }
-      }
-    });
     document.addEventListener('fullscreenchange', updateFullscreenUI);
     document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
 
@@ -1806,9 +1231,12 @@
       if (musicEnabled && !bgmPlaying && e.code !== 'KeyM') {
         startBgm();
       }
+      if (window.LayoutEditor && typeof window.LayoutEditor.isEditing === 'function' && window.LayoutEditor.isEditing()) {
+        return;
+      }
       if (e.code === 'Space' || e.code === 'KeyR') {
         e.preventDefault();
-        resetDrill();
+        if (typeof window.resetDrill === 'function') window.resetDrill();
       } else if (e.code === 'KeyF') {
         e.preventDefault();
         toggleFullscreen();
@@ -1817,26 +1245,11 @@
         toggleMusic();
       } else if (e.code === 'Escape') {
         closeMenu();
-        closeModal();
+        if (typeof window.closeModal === 'function') window.closeModal();
       }
     });
-
-    // Initialize & preload all 23 screens for 0ms tap/scroll swaps
-    window.addEventListener('load', () => {
-      const allUrls = [];
-      ALL_STEPS.forEach(s => {
-        allUrls.push(s.img);
-        if (s.scrollFrames) allUrls.push(...s.scrollFrames);
-      });
-      allUrls.push(FINAL_IMG_TRIPLE);
-      allUrls.forEach(src => {
-        const im = new Image();
-        im.src = src;
-        PRELOADED.push(im);
-      });
-      applyHitboxPosition();
-    });
   </script>
+  <script src="trainer/shop_ui.js"></script>
 </body>
 
 </html>
