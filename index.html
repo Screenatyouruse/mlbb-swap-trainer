@@ -484,6 +484,7 @@
   <div id="mini-hud">
     <span class="mini-pill" id="step-number-pill">1/20</span>
     <span class="timer-display" id="hud-timer">0.000s</span>
+    <button id="bgm-mini-btn" class="icon-btn" title="Music (M)" onclick="toggleMusic()">🎵</button>
     <button id="fs-btn" class="icon-btn" title="Fullscreen (F)" onclick="toggleFullscreen()">⛶</button>
     <button class="icon-btn" title="Restart (Space)" onclick="resetDrill()">↻</button>
     <button id="menu-btn" class="icon-btn" title="Settings" onclick="toggleMenu()">⚙</button>
@@ -502,6 +503,7 @@
     <span class="drawer-step-label" id="step-desc-text">Click Buy Shop</span>
     <button id="hitbox-mode-btn" class="btn" onclick="toggleHitboxMode()">👍 Hitbox: Realistic</button>
     <button id="fs-drawer-btn" class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    <button id="bgm-btn" class="btn" onclick="toggleMusic()">🎵 Music: ON</button>
     <button id="sound-btn" class="btn" onclick="toggleSound()">🔊 Sound: ON</button>
     <button id="hint-toggle-btn" class="btn" onclick="toggleHints()">💬 Hints: ON</button>
     <button class="btn btn-gold" onclick="resetDrill()">🔄 Restart</button>
@@ -559,12 +561,21 @@
     </div>
   </div>
 
+  <script src="trainer_assets/bgm.js"></script>
   <script>
     /* ============================================================
      * Audio Synthesis (Web Audio API - Zero External Files)
      * ============================================================ */
     let audioCtx = null;
     let soundEnabled = true;
+    let musicEnabled = true;
+    let bgmPlaying = false;
+    let bgmTimer = null;
+    let bgmMasterGain = null;
+    let bgmFilter = null;
+    let chipPulseWave = null;
+    let bgmLoopStart = 0;
+    let bgmNoteIdx = 0;
 
     function initAudio() {
       if (!audioCtx) {
@@ -573,6 +584,131 @@
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
+    }
+
+    function ensureBgmBus() {
+      if (!audioCtx || bgmMasterGain) return;
+      bgmFilter = audioCtx.createBiquadFilter();
+      bgmFilter.type = 'lowpass';
+      bgmFilter.frequency.value = 4200;
+      bgmMasterGain = audioCtx.createGain();
+      bgmMasterGain.gain.value = 0.22;
+      bgmFilter.connect(bgmMasterGain);
+      bgmMasterGain.connect(audioCtx.destination);
+      const n = 16;
+      const real = new Float32Array(n + 1);
+      const imag = new Float32Array(n + 1);
+      for (let k = 1; k <= n; k++) {
+        imag[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * 0.25);
+      }
+      chipPulseWave = audioCtx.createPeriodicWave(real, imag);
+    }
+
+    function playChipPianoNote(when, dur, midi, vel) {
+      if (!audioCtx || !bgmFilter || !chipPulseWave) return;
+      const f = 440 * Math.pow(2, (midi - 69) / 12);
+      const g = Math.min(0.24, Math.max(0.06, vel * 0.38));
+
+      if (midi < 55) {
+        const osc = audioCtx.createOscillator();
+        const env = audioCtx.createGain();
+        const decay = Math.min(dur + 0.08, 1.1);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, when);
+        env.gain.setValueAtTime(0.0001, when);
+        env.gain.linearRampToValueAtTime(g * 1.25, when + 0.005);
+        env.gain.exponentialRampToValueAtTime(0.0008, when + decay);
+        osc.connect(env);
+        env.connect(bgmFilter);
+        osc.start(when);
+        osc.stop(when + decay + 0.02);
+        return;
+      }
+
+      const osc1 = audioCtx.createOscillator();
+      const env1 = audioCtx.createGain();
+      const decay1 = Math.min(dur + 0.08, 0.85);
+      osc1.setPeriodicWave(chipPulseWave);
+      osc1.frequency.setValueAtTime(f, when);
+      env1.gain.setValueAtTime(0.0001, when);
+      env1.gain.linearRampToValueAtTime(g, when + 0.005);
+      env1.gain.exponentialRampToValueAtTime(0.0008, when + decay1);
+      osc1.connect(env1);
+      env1.connect(bgmFilter);
+      osc1.start(when);
+      osc1.stop(when + decay1 + 0.02);
+
+      const osc2 = audioCtx.createOscillator();
+      const env2 = audioCtx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(f * 2, when);
+      env2.gain.setValueAtTime(0.0001, when);
+      env2.gain.linearRampToValueAtTime(g * 0.14, when + 0.003);
+      env2.gain.exponentialRampToValueAtTime(0.0005, when + 0.045);
+      osc2.connect(env2);
+      env2.connect(bgmFilter);
+      osc2.start(when);
+      osc2.stop(when + 0.055);
+    }
+
+    function scheduleBgm() {
+      if (!musicEnabled || !bgmPlaying || !window.BGM_DATA || !audioCtx) return;
+      const notes = window.BGM_DATA.notes;
+      const loopDur = window.BGM_DATA.dur;
+      const horizon = audioCtx.currentTime + 0.30;
+
+      while (bgmNoteIdx < notes.length) {
+        const n = notes[bgmNoteIdx];
+        const when = bgmLoopStart + n[0];
+        if (when >= horizon) break;
+        if (when >= audioCtx.currentTime - 0.05) {
+          playChipPianoNote(Math.max(when, audioCtx.currentTime), n[1], n[2], n[3]);
+        }
+        bgmNoteIdx++;
+      }
+
+      if (bgmNoteIdx >= notes.length && audioCtx.currentTime >= bgmLoopStart + loopDur - 0.30) {
+        bgmLoopStart += loopDur;
+        bgmNoteIdx = 0;
+      }
+    }
+
+    function startBgm() {
+      initAudio();
+      ensureBgmBus();
+      if (!musicEnabled || bgmPlaying || !window.BGM_DATA || !audioCtx) return;
+      bgmPlaying = true;
+      bgmMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      bgmMasterGain.gain.setTargetAtTime(0.22, audioCtx.currentTime, 0.03);
+      bgmLoopStart = audioCtx.currentTime + 0.05;
+      bgmNoteIdx = 0;
+      if (bgmTimer) clearInterval(bgmTimer);
+      bgmTimer = setInterval(scheduleBgm, 80);
+      scheduleBgm();
+    }
+
+    function stopBgm() {
+      if (bgmTimer) {
+        clearInterval(bgmTimer);
+        bgmTimer = null;
+      }
+      bgmPlaying = false;
+      if (audioCtx && bgmMasterGain) {
+        const now = audioCtx.currentTime;
+        bgmMasterGain.gain.cancelScheduledValues(now);
+        bgmMasterGain.gain.setValueAtTime(bgmMasterGain.gain.value, now);
+        bgmMasterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+      }
+    }
+
+    function toggleMusic() {
+      musicEnabled = !musicEnabled;
+      const mini = document.getElementById('bgm-mini-btn');
+      mini.innerText = musicEnabled ? '🎵' : '🔇';
+      mini.style.opacity = musicEnabled ? '1' : '0.6';
+      document.getElementById('bgm-btn').innerText = musicEnabled ? '🎵 Music: ON' : '🔇 Music: OFF';
+      if (musicEnabled) startBgm();
+      else stopBgm();
     }
 
     function toggleSound() {
@@ -697,6 +833,7 @@
     const PAD_X     = { l: 0.830, t: 0.055, w: 0.075, h: 0.100 };
     const BOX_SLOT1 = { l: 0.217, t: 0.838, w: 0.047, h: 0.100 };
     const PAD_SLOT1 = { l: 0.212, t: 0.820, w: 0.055, h: 0.135 };
+    const SHOP_MODAL = { l: 0.097, t: 0.052, r: 0.903, b: 0.950 };
 
     const ALL_STEPS = [
       {
@@ -721,8 +858,9 @@
       },
       {
         step: 3,
+        exitShop: true,
         title: "Exit Shop (X)",
-        hint: "Boots sold! Tap the white 'X' button to close the shop.",
+        hint: "Boots sold! Tap the white 'X' button or anywhere outside the shop.",
         img: "trainer_assets/02_shop_boots_sold.jpg",
         sound: "click",
         box: BOX_X,
@@ -801,8 +939,9 @@
       },
       {
         step: 11,
+        exitShop: true,
         title: "Exit Shop (X)",
-        hint: "Winter Crown bought! Tap the white 'X' button to close the shop.",
+        hint: "Winter Crown bought! Tap the white 'X' button or anywhere outside the shop.",
         img: "trainer_assets/10_shop_winter_bought.jpg",
         sound: "click",
         box: BOX_X,
@@ -896,8 +1035,9 @@
       },
       {
         step: 20,
+        exitShop: true,
         title: "Exit Shop (X)",
-        hint: "Rose Gold Meteor equipped! Tap the white 'X' button to finish!",
+        hint: "Rose Gold Meteor equipped! Tap the white 'X' button or anywhere outside the shop to finish!",
         img: "trainer_assets/18_shop_rosegold_bought.jpg",
         sound: "click",
         box: BOX_X,
@@ -1234,8 +1374,29 @@
       }
     }
 
+    function triggerExitStep(e) {
+      e.stopPropagation();
+      closeMenu();
+      initAudio();
+      const now = performance.now();
+      if (now - lastTapTime < 60) return;
+      lastTapTime = now;
+      if (!isRunning) startTimer();
+      completeCurrentStep(e);
+    }
+
     function handleMissTap(e) {
       if (e.target === activeHitbox) return;
+      const curStep = getActiveSteps()[currentStepIdx];
+      if (curStep && curStep.exitShop) {
+        const rect = screenWrapper.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width;
+        const ny = (e.clientY - rect.top) / rect.height;
+        if (nx < SHOP_MODAL.l || nx > SHOP_MODAL.r || ny < SHOP_MODAL.t || ny > SHOP_MODAL.b) {
+          triggerExitStep(e);
+          return;
+        }
+      }
       initAudio();
       misclicks++;
       playErrorBuzz();
@@ -1359,18 +1520,36 @@
     mainStage.addEventListener('pointerdown', (e) => {
       if (!menuDrawer.contains(e.target) && !miniHud.contains(e.target)) {
         closeMenu();
+        if (!screenWrapper.contains(e.target)) {
+          const curStep = getActiveSteps()[currentStepIdx];
+          if (curStep && curStep.exitShop) {
+            triggerExitStep(e);
+          }
+        }
       }
     });
     document.addEventListener('fullscreenchange', updateFullscreenUI);
     document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
 
+    window.addEventListener('pointerdown', (e) => {
+      if (musicEnabled && !bgmPlaying && e.target.id !== 'bgm-mini-btn' && e.target.id !== 'bgm-btn') {
+        startBgm();
+      }
+    });
+
     window.addEventListener('keydown', (e) => {
+      if (musicEnabled && !bgmPlaying && e.code !== 'KeyM') {
+        startBgm();
+      }
       if (e.code === 'Space' || e.code === 'KeyR') {
         e.preventDefault();
         resetDrill();
       } else if (e.code === 'KeyF') {
         e.preventDefault();
         toggleFullscreen();
+      } else if (e.code === 'KeyM') {
+        e.preventDefault();
+        toggleMusic();
       } else if (e.code === 'Escape') {
         closeMenu();
         closeModal();
